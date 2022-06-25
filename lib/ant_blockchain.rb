@@ -7,7 +7,7 @@ module AntBlockchain
   class Error < StandardError; end
   class AccessError < Error; end
   class ShakeHandError < Error; end
-  
+
   class Client
     attr_accessor :tenant_id, :bizid, :access_id, :access_key, :account, :mykms_key_id
     attr_reader :token, :root_url, :token_expires_at
@@ -28,7 +28,7 @@ module AntBlockchain
     end
 
     def shakehand(force = false)
-      if token_expired? || force 
+      if token_expired? || force
         @token = _get_token()
       end
     rescue => e
@@ -37,8 +37,8 @@ module AntBlockchain
 
     def deposit(order_id: gen_order_id, content:, mykms_key_id: nil, account: nil, gas: 100000)
       shakehand()
-      body = { 
-        orderId: order_id, 
+      body = {
+        orderId: order_id,
         bizid: bizid,
         account: account || self.account,
         content: content,
@@ -54,7 +54,7 @@ module AntBlockchain
 
     def deploy_sol(order_id: gen_order_id, account: nil, contract_name:, contract_code:, mykms_key_id: nil, gas: 100000)
       shakehand()
-      body = { 
+      body = {
         orderId: order_id,
         bizid: bizid,
         account: account || self.account,
@@ -72,7 +72,7 @@ module AntBlockchain
 
     def call_sol(order_id: gen_order_id, account: nil, contract_name:, method_signature:, input_params:, out_types:, mykms_key_id: nil, gas: 100000)
       shakehand()
-      body = { 
+      body = {
         orderId: order_id,
         bizid: bizid,
         account: account || self.account,
@@ -92,7 +92,7 @@ module AntBlockchain
 
     def query_transaction(hash)
       shakehand()
-      body = { 
+      body = {
         bizid: bizid,
         method: 'QUERYTRANSACTION',
         accessId: access_id,
@@ -104,7 +104,7 @@ module AntBlockchain
 
     def query_receipt(hash)
       shakehand()
-      body = { 
+      body = {
         bizid: bizid,
         method: 'QUERYRECEIPT',
         accessId: access_id,
@@ -116,52 +116,52 @@ module AntBlockchain
 
     def query_blockheader(block_number)
       shakehand()
-      body = { 
+      body = {
         bizid: bizid,
         method: 'QUERYBLOCK',
         accessId: access_id,
         requestStr: block_number,
         token: self.token
        }
-       _request(QUERY_PATH, body)      
+       _request(QUERY_PATH, body)
     end
 
     def query_blockbody(block_number)
       shakehand()
-      body = { 
+      body = {
         bizid: bizid,
         method: 'QUERYBLOCKBODY',
         accessId: access_id,
         requestStr: block_number,
         token: self.token
        }
-       _request(QUERY_PATH, body)         
+       _request(QUERY_PATH, body)
     end
 
     def query_last_block()
       shakehand()
-      body = { 
+      body = {
         bizid: bizid,
         method: 'QUERYLASTBLOCK',
         accessId: access_id,
         token: self.token
        }
-       _request(QUERY_PATH, body)           
+       _request(QUERY_PATH, body)
     end
 
     def query_account(account)
       shakehand()
-      body = { 
+      body = {
         bizid: bizid,
         method: 'QUERYACCOUNT',
         requestStr: "{\"queryAccount\":\"#{account}\"}",
         accessId: access_id,
         token: self.token
        }
-       _request(QUERY_PATH, body)           
+       _request(QUERY_PATH, body)
     end
 
-    def create_account(order_id: gen_order_id, new_account:, new_kms_id:)
+    def create_account(order_id: gen_order_id, new_account:, new_kms_id:, gas: 100000)
       shakehand()
       body = {
         orderId: order_id,
@@ -173,7 +173,8 @@ module AntBlockchain
         newAccountKmsId: new_kms_id,
         accessId: access_id,
         token: self.token,
-        tenantid: tenant_id
+        tenantid: tenant_id,
+        gas: gas
        }
        _request(TRANSACTION_PATH, body)
     end
@@ -181,7 +182,7 @@ module AntBlockchain
     def parse_params(output, type, convert: true)
       output = Base64.decode64(output).unpack("H*") if convert
       content = output
-      body = { 
+      body = {
         vmTypeEnum: 'EVM',
         content: content,
         abi: "[\"#{type}\"]"
@@ -206,7 +207,7 @@ module AntBlockchain
       raise(AccessError, result) unless result['success']
       result
     end
-    
+
     def _get_token()
       time = Time.now.to_i.to_s + '000'
       tnonce = access_id + time
