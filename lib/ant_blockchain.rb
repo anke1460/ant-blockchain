@@ -204,7 +204,7 @@ module AntBlockchain
     def _request(path, body)
       response = RestClient.post(root_url + path, body.to_json, { content_type: :json})
       result = JSON.parse(response.body)
-      raise(AccessError, result) unless result['success']
+      # raise(AccessError, result) unless result['success']
       result
     end
 
